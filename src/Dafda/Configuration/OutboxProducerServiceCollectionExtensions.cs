@@ -6,8 +6,15 @@ using Microsoft.Extensions.Hosting;
 
 namespace Dafda.Configuration
 {
+    /// <summary></summary>
     public static class OutboxProducerServiceCollectionExtensions
     {
+        /// <summary>
+        /// Add the Dafda implementation of the Outbox pattern. The publisher runs in a
+        /// <see cref="IHostedService"/>. 
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> used in <c>Startup</c>.</param>
+        /// <param name="options">Use this action to override Dafda and underlying Kafka configuration.</param>
         public static void AddOutbox(this IServiceCollection services, Action<OutboxProducerOptions> options)
         {
             var outgoingMessageRegistry = new OutgoingMessageRegistry();

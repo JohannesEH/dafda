@@ -5,8 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Dafda.Configuration
 {
+    /// <summary></summary>
     public static class ProducerServiceCollectionExtensions
     {
+        /// <summary>
+        /// Add a Kafka producer available through the  Microsoft dependency injection's <see cref="IServiceProvider"/>
+        /// as <see cref="IProducer"/>. 
+        ///
+        /// NOTE: currently only a single producer can be configured per application.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/> used in <c>Startup</c>.</param>
+        /// <param name="options">Use this action to override Dafda and underlying Kafka configuration.</param>
         public static void AddProducerFor<TClient>(this IServiceCollection services, Action<ProducerOptions> options) where TClient : class
         {
             var outgoingMessageRegistry = new OutgoingMessageRegistry();
