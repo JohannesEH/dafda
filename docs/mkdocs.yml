@@ -2,15 +2,13 @@
 site_name: Dafda
 site_description: Dafda documentation
 #site_author: 'Martin Donath'
-#site_url: 'https://squidfunk.github.io/mkdocs-material/'
+site_url: 'https://dfds.github.io/dafda/'
 
 # Repository
 repo_name: "dfds/dafda"
 repo_url: "https://github.com/dfds/dafda"
 
 # docs_dir: lala
-
-sidebar: false
 
 theme:
   name: material
@@ -43,7 +41,7 @@ markdown_extensions:
 extra_css:
   - "stylesheets/critic.css"
 
-pages:
+nav:
   - Introduction: index.md
   - Documentation:
       - Installation: installation.md

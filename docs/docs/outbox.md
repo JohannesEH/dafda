@@ -1,11 +1,27 @@
 # Outbox
 
-{== Outbox? Who? What? ==} {>> Should we describe it? <<}
+The purpose of this documentation is not to justify the motivations behind, nor give a detail explanation of the Outbox pattern (there are already a lot of good articles[^1]).
+
+## Outbox and Dafda
+
+Below is an outline of the Dafda implementation and the components envolved:
+
+![outbox-pattern](/imgs/outbox-pattern.png "Outbox pattern")
+
+The image above include the following components:
+
+1. A (micro)service: Site Management Service
+2. A (Postgres) database, including tables for domain models, along with an OutboxMessage table
+3. An Outbox Processor, which can be part of the service (1), or a standalone service. {>>IMPORTANT: only a single writer<<}
+4. One or more Kafka topics.
 
 
-## Quick Start
+The service (1) is in charge of writing domain models, as well as Outbox message to the database, as part of the same transations.
 
-The quick start example uses [EF Core](https://docs.microsoft.com/en-us/ef/core/) and Postgres to persist domain models and outbox messages.
+
+## .NET and Postgres implementation
+
+This example uses .NET Core, [EF Core](https://docs.microsoft.com/en-us/ef/core/) and Postgres to persist domain models and outbox messages.
 
 1. Add outbox producer configuration
 2. Setup persistence
@@ -241,3 +257,4 @@ public class Service
 
 On the returned `IOutboxNotifier` call `Notify` ... {>>more info on notification here<<}
 
+[^1]: Some articles on the Outbox pattern: [Pattern: Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html), [Implementing the Outbox Pattern](https://dzone.com/articles/implementing-the-outbox-pattern), [Reliable Microservices Data Exchange With the Outbox Pattern](https://debezium.io/blog/2019/02/19/reliable-microservices-data-exchange-with-the-outbox-pattern/)
