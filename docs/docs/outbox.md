@@ -2,24 +2,22 @@
 
 The purpose of this documentation is not to justify the motivations behind, nor give a detail explanation of the Outbox pattern (there are already a lot of good articles[^1]).
 
-## Outbox and Dafda
+## Dafda and the Outbox pattern
 
 Below is an outline of the Dafda implementation and the components envolved:
 
 ![outbox-pattern](/imgs/outbox-pattern.png "Outbox pattern")
 
-The image above include the following components:
+The image above contains the following components:
 
-1. A (micro)service: Site Management Service
-2. A (Postgres) database, including tables for domain models, along with an OutboxMessage table
-3. An Outbox Processor, which can be part of the service (1), or a standalone service. {>>IMPORTANT: only a single writer<<}
+1. The _Site Management Service_ application.
+2. A database, including tables for domain models, as well as an _OutboxMessage_ table
+3. The _Outbox processor_, which can be part of the application [1], or a standalone service. {>>IMPORTANT: only a single writer<<}
 4. One or more Kafka topics.
 
+The service [1] is in charge of writing domain models, as well as Outbox message to the database [2], as part of the same transations. The Outbox processor [3] will (at intervals and/or when signalled) pick up any unsent Outbox messages, and produce those on the designated Kafka topics [4] (see [Add outbox producer configuration](#add-outbox-producer-configuration) for how to configure messages and target topics).
 
-The service (1) is in charge of writing domain models, as well as Outbox message to the database, as part of the same transations.
-
-
-## .NET and Postgres implementation
+## Example .NET and Postgres implementation
 
 This example uses .NET Core, [EF Core](https://docs.microsoft.com/en-us/ef/core/) and Postgres to persist domain models and outbox messages.
 
