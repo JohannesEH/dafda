@@ -9,7 +9,6 @@ namespace Dafda.Producing
     internal class KafkaProducer : IDisposable
     {
         private static readonly ILog Log = LogProvider.GetCurrentClassLogger();
-
         private readonly IProducer<string, string> _innerKafkaProducer;
 
         public KafkaProducer(IEnumerable<KeyValuePair<string, string>> configuration)
@@ -44,9 +43,49 @@ namespace Dafda.Producing
             };
         }
 
+        public virtual async Task Produce(IncomingOutgoingMessage message)
+        {
+            try
+            {
+                var innerKafkaMessage = ComposeMessage(message.PartitionKey, SerializeEnvelope(message.Envelope));
+                await InternalProduce(message.TopicName, innerKafkaMessage);
+            }
+            catch (ProduceException<string, string> e)
+            {
+                Log.Error(e, "Error publishing message due to: {ErrorReason} ({ErrorCode})", e.Error.Reason, e.Error.Code);
+                throw;
+            }
+        }
+
+        public static Message<string, string> ComposeMessage(string partitionKey, string serializedEnvelope)
+        {
+            return new Message<string, string>
+            {
+                Key = partitionKey,
+                Value = serializedEnvelope,
+            };
+        }
+
+        protected virtual string SerializeEnvelope(object envelope)
+        {
+            return "";
+        }
+
+        protected virtual Task<DeliveryResult<string, string>> InternalProduce(string topic, Message<string, string> innerKafkaMessage)
+        {
+            return _innerKafkaProducer.ProduceAsync(topic, innerKafkaMessage);
+        }
+
         public virtual void Dispose()
         {
             _innerKafkaProducer?.Dispose();
         }
+    }
+
+    public class IncomingOutgoingMessage
+    {
+        public string TopicName { get; set; }
+        public string PartitionKey { get; set; }
+        public object Envelope { get; set; }
     }
 }

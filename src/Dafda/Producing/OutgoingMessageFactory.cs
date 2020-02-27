@@ -47,7 +47,6 @@ namespace Dafda.Producing
             {
                 IgnoreNullValues = false,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                
             });
         }
     }

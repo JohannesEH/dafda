@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Dafda.Outbox;
 
 namespace Dafda.Producing
@@ -17,6 +18,12 @@ namespace Dafda.Producing
         internal string Name { get; set; } = "__Default Producer__";
         
         public async Task Produce(object message)
+        {
+            var outgoingMessage = AssembleOutgoingMessage(message);
+            await _kafkaProducer.Produce(outgoingMessage);
+        }
+
+        public async Task Produce(object message, Dictionary<string, string> headers)
         {
             var outgoingMessage = AssembleOutgoingMessage(message);
             await _kafkaProducer.Produce(outgoingMessage);
