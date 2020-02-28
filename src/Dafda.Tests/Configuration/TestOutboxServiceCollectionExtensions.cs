@@ -55,7 +55,7 @@ namespace Dafda.Tests.Configuration
             {
                 cts.CancelAfter(10);
 
-                pollingPublisher.ProcessOutbox(cts.Token);
+                await pollingPublisher.ProcessOutbox(cts.Token);
             }
 
             Assert.True(fake.OutboxMessages.All(x => x.ProcessedUtc.HasValue));
@@ -75,12 +75,14 @@ namespace Dafda.Tests.Configuration
 
         private class DummyNotification : IOutboxNotification
         {
-            public void Notify()
+            public Task Notify(CancellationToken cancellationToken)
             {
+                return Task.CompletedTask;
             }
 
-            public void Wait()
+            public Task<bool> Wait(CancellationToken cancellationToken)
             {
+                return Task.FromResult(false);
             }
         }
     }

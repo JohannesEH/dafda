@@ -1,11 +1,12 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Dafda.Outbox
 {
     public class OutboxNotification : IOutboxNotification, IDisposable
     {
-        private readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1);
         private readonly TimeSpan _delay;
 
         private bool _disposed;
@@ -15,24 +16,25 @@ namespace Dafda.Outbox
             _delay = delay;
         }
 
-        public void Notify()
+        public Task Notify(CancellationToken cancellationToken)
         {
             if (_disposed)
             {
-                return;
+                return Task.CompletedTask;
             }
 
-            _autoResetEvent.Set();
+            _semaphore.Release();
+            return Task.CompletedTask;
         }
 
-        public void Wait()
+        public Task<bool> Wait(CancellationToken cancellationToken)
         {
             if (_disposed)
             {
-                return;
+                return Task.FromResult<bool>(false);
             }
 
-            _autoResetEvent.WaitOne(_delay);
+            return _semaphore.WaitAsync(_delay, cancellationToken);
         }
 
         public void Dispose()
@@ -42,7 +44,7 @@ namespace Dafda.Outbox
                 return;
             }
 
-            _autoResetEvent.Dispose();
+            _semaphore.Dispose();
             _disposed = true;
         }
     }

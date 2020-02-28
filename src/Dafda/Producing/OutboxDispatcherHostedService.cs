@@ -23,19 +23,22 @@ namespace Dafda.Producing
         {
             try
             {
-                ProcessOutbox(_cancellationTokenSource.Token);
+                ProcessOutbox(_cancellationTokenSource.Token).GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (ThreadAbortException)
             {
             }
         }
 
-        public void ProcessOutbox(CancellationToken cancellationToken)
+        public async Task ProcessOutbox(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                _outboxDispatcher.Dispatch(cancellationToken).Wait(cancellationToken);
-                _outboxNotification.Wait();
+                await _outboxDispatcher.Dispatch(cancellationToken);
+                await _outboxNotification.Wait(cancellationToken);
             }
         }
 
@@ -61,7 +64,6 @@ namespace Dafda.Producing
         {
             _cancellationTokenSource?.Cancel();
 
-            _outboxNotification.Notify();
             _thread?.Join();
             _thread = null;
         }

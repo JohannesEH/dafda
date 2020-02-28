@@ -43,7 +43,7 @@ namespace Sample
                         }
 
                     }
-                    outboxNotifier?.Notify(); // NOTE: when using postgres LISTEN/NOTIFY this should/could be part of the transaction scope above
+                    outboxNotifier?.Notify(stoppingToken); // NOTE: when using postgres LISTEN/NOTIFY this should/could be part of the transaction scope above
 
                     await Task.Delay(1000, stoppingToken);
                 }
