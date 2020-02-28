@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Dafda.Consuming;
 using Dafda.Logging;
+using Metadata = Confluent.Kafka.Metadata;
 
 namespace Dafda.Producing
 {
@@ -16,6 +20,7 @@ namespace Dafda.Producing
             _innerKafkaProducer = new ProducerBuilder<string, string>(configuration).Build();
         }
 
+        [Obsolete]
         public virtual async Task Produce(OutgoingMessage outgoingMessage)
         {
             try
@@ -43,12 +48,17 @@ namespace Dafda.Producing
             };
         }
 
+        public IPayloadSerializer Serializer { get; set; } = new DefaultPayloadSerializer();
+
         public virtual async Task Produce(IncomingOutgoingMessage message)
         {
             try
             {
-                var innerKafkaMessage = ComposeMessage(message.PartitionKey, SerializeEnvelope(message.Envelope));
-                await InternalProduce(message.TopicName, innerKafkaMessage);
+                await InternalProduce(
+                    topic: message.TopicName,
+                    key: message.PartitionKey,
+                    value: SerializePayload(message.Payload)
+                );
             }
             catch (ProduceException<string, string> e)
             {
@@ -57,18 +67,23 @@ namespace Dafda.Producing
             }
         }
 
-        public static Message<string, string> ComposeMessage(string partitionKey, string serializedEnvelope)
+        private string SerializePayload(object payload)
         {
-            return new Message<string, string>
-            {
-                Key = partitionKey,
-                Value = serializedEnvelope,
-            };
+            return Serializer?.Serialize(payload);
         }
 
-        protected virtual string SerializeEnvelope(object envelope)
+        protected virtual Task InternalProduce(string topic, string key, string value)
         {
-            return "";
+            var task = InternalProduce(
+                topic: topic,
+                innerKafkaMessage: new Message<string, string>
+                {
+                    Key = key,
+                    Value = value
+                }
+            );
+
+            return task;
         }
 
         protected virtual Task<DeliveryResult<string, string>> InternalProduce(string topic, Message<string, string> innerKafkaMessage)
@@ -84,8 +99,41 @@ namespace Dafda.Producing
 
     public class IncomingOutgoingMessage
     {
-        public string TopicName { get; set; }
-        public string PartitionKey { get; set; }
-        public object Envelope { get; set; }
+        public IncomingOutgoingMessage(string topicName, string partitionKey, object payload)
+        {
+            TopicName = topicName;
+            PartitionKey = partitionKey;
+            Payload = payload;
+        }
+
+        public string TopicName { get; }
+        public string PartitionKey { get; }
+        public object Payload { get; }
+    }
+
+    public interface IPayloadSerializer
+    {
+        string Serialize(object payload);
+    }
+
+    public class DefaultPayloadSerializer : IPayloadSerializer
+    {
+        private readonly JsonSerializerOptions _jsonSerializerOptions;
+
+        public DefaultPayloadSerializer()
+        {
+            _jsonSerializerOptions = new JsonSerializerOptions
+            {
+                IgnoreNullValues = false,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                
+            };
+        }
+
+        public string Serialize(object payload)
+        {
+            return JsonSerializer.Serialize(payload, _jsonSerializerOptions);
+        }
     }
 }

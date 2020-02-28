@@ -1,5 +1,8 @@
-﻿namespace Dafda.Producing
+﻿using System;
+
+namespace Dafda.Producing
 {
+    [Obsolete]
     internal class OutgoingMessageBuilder
     {
         private string _topic;
